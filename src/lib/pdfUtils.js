@@ -1,12 +1,18 @@
 // src/lib/pdfUtils.js
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 
-// IMPORTANT: import worker URL that exists in your node_modules (you listed pdf.worker.min.mjs).
-// Use Vite's ?url to get a publicly-served URL for the asset.
-import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+// Use the .mjs worker file via Vite ?url so it becomes a served asset in production.
+// The mjs worker file exists in node_modules/pdfjs-dist/build/.
+import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
-// Set the workerSrc to the imported worker URL so pdfjs can load the worker correctly.
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+} catch (err) {
+  // Fallback (last resort) — avoids fatal runtime crash in case import resolution fails on the host
+  console.warn("pdfUtils: workerUrl import failed, falling back to CDN. Error:", err);
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js";
+}
 
 /**
  * Extract readable text from a PDF File object
